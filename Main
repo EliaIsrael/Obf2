@@ -5,6 +5,20 @@ import io
 import re
 import builtins
 
+import ctypes
+
+def is_debugger_being_debugged():
+    """Directly read the PEB BeingDebugged flag to detect a debugger."""
+    peb_address = ctypes.windll.kernel32.GetCurrentProcess()
+    peb = ctypes.windll.ntdll.RtlGetCurrentPeb()
+    being_debugged = ctypes.c_ubyte.from_address(peb + 2).value  # Offset 2 in PEB
+    return being_debugged != 0
+
+if is_debugger_being_debugged():
+    print("Debugger detected via PEB! Exiting...")
+    exit()
+
+
 # Unicode characters for highly obscure variable and function names
 OBSCURE_CHARS = "ƃƈȡɘʄʛɦɨʝʞʟɱɲʘȹɋʀʂʉʋɯʷƶ"
 
