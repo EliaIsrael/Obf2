@@ -1,0 +1,70 @@
+import random
+import string
+import tokenize
+import io
+import re
+import builtins
+
+# Unicode characters for highly obscure variable and function names
+OBSCURE_CHARS = "ƃƈȡɘʄʛɦɨʝʞʟɱɲʘȹɋʀʂʉʋɯʷƶ"
+
+def generate_obfuscated_name(length=10):
+    """Generate a randomized obfuscated name using obscure characters."""
+    return ''.join(random.choices(OBSCURE_CHARS, k=length))
+
+def extract_function_names(source_code):
+    """Extract function names using regex."""
+    return set(re.findall(r'def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', source_code))
+
+def get_builtin_names():
+    """Return a set of built-in names to exclude from obfuscation."""
+    return set(dir(builtins))
+
+def create_obfuscation_map(source_code):
+    """Create a mapping of function and variable names to obfuscated names."""
+    function_names = extract_function_names(source_code)
+    
+    # Extract user-defined variables using tokenize
+    user_vars = set()
+    tokens = tokenize.tokenize(io.BytesIO(source_code.encode()).readline)
+    for token in tokens:
+        if token.type == tokenize.NAME and token.string.isidentifier():
+            user_vars.add(token.string)
+    
+    # Exclude built-in functions
+    excluded_names = get_builtin_names()
+    names_to_obfuscate = (function_names | user_vars) - excluded_names
+
+    return {name: generate_obfuscated_name() for name in names_to_obfuscate}
+
+def obfuscate_code(source_code):
+    """Obfuscate source code while ensuring strings remain unchanged."""
+    obfuscation_map = create_obfuscation_map(source_code)
+    result = []
+    
+    tokens = tokenize.tokenize(io.BytesIO(source_code.encode()).readline)
+    for token in tokens:
+        if token.type == tokenize.NAME and token.string in obfuscation_map:
+            result.append(obfuscation_map[token.string])  # Replace function/variable names
+        else:
+            result.append(token.string)  # Keep everything else unchanged
+
+    return "".join(result)
+
+def obfuscate_file(input_path, output_path):
+    """Read a Python file, obfuscate function and variable names, and write to a new file."""
+    with open(input_path, "r", encoding="utf-8") as f:
+        source_code = f.read()
+    
+    obfuscated_code = obfuscate_code(source_code)
+    
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(obfuscated_code)
+    
+    print(f"Obfuscated code saved to {output_path}")
+
+# Example usage:
+if __name__ == "__main__":
+    input_file = "example.py"      # Change to your input file
+    output_file = "obfuscated.py"  # Change to your desired output file
+    obfuscate_file(input_file, output_file)
