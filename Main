@@ -27,7 +27,16 @@ def hash_all_files_parallel(directory):
         results = pool.map(hash_file, files_to_hash)
 
     return results
+def check_parent_process():
+    suspicious_parents = ["x32dbg.exe", "x64dbg.exe", "ollydbg.exe", "ida.exe", "windbg.exe"]
+    parent = psutil.Process().parent()
+    return parent and parent.name().lower() in suspicious_parents
 
+def check_timing():
+    start = time.time()
+    for _ in range(10000000):
+        pass
+    return time.time() - start > 0.3
 if __name__ == "__main__":
     multiprocessing.freeze_support()  # Required for Nuitka!
     
